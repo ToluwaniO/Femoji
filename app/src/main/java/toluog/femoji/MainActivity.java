@@ -1,5 +1,6 @@
 package toluog.femoji;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -23,7 +24,9 @@ public class MainActivity extends AppCompatActivity {
                     mTextMessage.setText(R.string.title_home);
                     return true;
                 case R.id.navigation_post:
-                    mTextMessage.setText(R.string.title_dashboard);
+                   //mTextMessage.setText(R.string.title_dashboard);
+                    Intent intent = new Intent(MainActivity.this, CameraActivity.class);
+                    startActivity(intent);
                     return true;
                 case R.id.navigation_profile:
                     mTextMessage.setText(R.string.title_notifications);
