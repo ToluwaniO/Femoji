@@ -1,5 +1,6 @@
 package toluog.femoji;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -9,10 +10,16 @@ import android.widget.ImageView;
 
 public class EmojiAdapter extends RecyclerView.Adapter<EmojiAdapter.ViewHolder> {
 
-    private int[] emojis;
+    public interface EmojiClicked {
+        public void embedEmoji(int index);
+    }
 
-    EmojiAdapter(int[] emojis) {
+    private int[] emojis;
+    private EditImageFragment fragment;
+
+    EmojiAdapter(EditImageFragment fragment, int[] emojis) {
         this.emojis = emojis;
+        this.fragment = fragment;
     }
 
     @NonNull
@@ -43,6 +50,12 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiAdapter.ViewHolder> 
 
         public void bind(int image) {
             emojiView.setImageResource(image);
+            emojiView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    fragment.embedEmoji(getAdapterPosition());
+                }
+            });
         }
     }
 }

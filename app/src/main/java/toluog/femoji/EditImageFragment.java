@@ -5,13 +5,27 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.ml.vision.FirebaseVision;
+import com.google.firebase.ml.vision.common.FirebaseVisionImage;
+import com.google.firebase.ml.vision.face.FirebaseVisionFace;
+import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector;
+import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions;
+import com.otaliastudios.cameraview.CameraUtils;
+
+import java.util.List;
 
 
 /**
@@ -24,12 +38,33 @@ import android.widget.ImageView;
  */
 public class EditImageFragment extends Fragment {
 
+    private String TAG = EditImageFragment.class.getSimpleName();
+    byte[] rawImage;
     private Bitmap startImage;
     private ImageView finalImageView;
     private RecyclerView emojiRecycler;
     private EmojiAdapter adapter;
     private static String ARG_ARRAY = "Picture array";
+    private List<FirebaseVisionFace> faces;
     private int[] emojis = {R.drawable.frown_face, R.drawable.one_eye_closed_emoji, R.drawable.smile_emoji};
+
+    private OnSuccessListener<List<FirebaseVisionFace>> sListener = new OnSuccessListener<List<FirebaseVisionFace>>() {
+        @Override
+        public void onSuccess(List<FirebaseVisionFace> firebaseVisionFaces) {
+            Log.d(TAG, firebaseVisionFaces.size() + " faces found");
+            faces = firebaseVisionFaces;
+            for (FirebaseVisionFace face : firebaseVisionFaces) {
+                handleFaces(face);
+            }
+        }
+    };
+
+    private OnFailureListener fListener = new OnFailureListener() {
+        @Override
+        public void onFailure(@NonNull Exception e) {
+            Log.d(TAG, e.getMessage());
+        }
+    };
 
     private OnFragmentInteractionListener mListener;
 
@@ -56,8 +91,9 @@ public class EditImageFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            byte[] data = getArguments().getByteArray(ARG_ARRAY);
-            startImage = BitmapFactory.decodeByteArray(data, 0, data.length);
+            rawImage = getArguments().getByteArray(ARG_ARRAY);
+            //startImage = BitmapFactory.decodeByteArray(data, 0, data.length);
+
         }
     }
 
@@ -68,14 +104,55 @@ public class EditImageFragment extends Fragment {
         finalImageView = v.findViewById(R.id.finalImageView);
         emojiRecycler = v.findViewById(R.id.emoji_recycler);
 
-        adapter = new EmojiAdapter(emojis);
+        adapter = new EmojiAdapter(this, emojis);
         emojiRecycler.setLayoutManager(new LinearLayoutManager(v.getContext(),
                 LinearLayoutManager.HORIZONTAL, false));
         emojiRecycler.setAdapter(adapter);
 
-        finalImageView.setImageBitmap(startImage);
+        CameraUtils.decodeBitmap(rawImage, new CameraUtils.BitmapCallback() {
+            @Override
+            public void onBitmapReady(Bitmap bitmap) {
+                startImage = bitmap;
+                finalImageView.setImageBitmap(startImage);
+                initFVision();
+            }
+        });
 
         return v;
+    }
+
+    private void initFVision() {
+        FirebaseVisionFaceDetectorOptions options =
+                new FirebaseVisionFaceDetectorOptions.Builder()
+                        .setModeType(FirebaseVisionFaceDetectorOptions.ACCURATE_MODE)
+                        .setLandmarkType(FirebaseVisionFaceDetectorOptions.ALL_LANDMARKS)
+                        .setClassificationType(FirebaseVisionFaceDetectorOptions.ALL_CLASSIFICATIONS)
+                        .setMinFaceSize(0.15f)
+                        .setTrackingEnabled(true)
+                        .build();
+        FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(startImage);
+        FirebaseVisionFaceDetector detector = FirebaseVision.getInstance()
+                .getVisionFaceDetector(options);
+        Task<List<FirebaseVisionFace>> result = detector.detectInImage(image)
+                .addOnSuccessListener(sListener)
+                .addOnFailureListener(fListener);
+    }
+
+    private void handleFaces(FirebaseVisionFace face) {
+        Bitmap finalImage = FaceUtil.drawSquares(startImage, face.getBoundingBox());
+        finalImageView.setImageBitmap(finalImage);
+    }
+
+    public void embedEmoji(int index) {
+        Bitmap second = BitmapFactory.decodeResource(getContext().getResources(), emojis[index]);
+        Bitmap finalImage = null;
+
+        if(faces != null && faces.size() > 0) {
+            for (FirebaseVisionFace face : faces) {
+                finalImage = FaceUtil.drawFaces(startImage, second, face.getBoundingBox());
+            }
+        }
+        finalImageView.setImageBitmap(finalImage);
     }
 
     @Override

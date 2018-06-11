@@ -12,6 +12,7 @@
         android:id="@+id/finalImageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:scaleType="fitXY"
         android:src="@android:color/transparent" />
 
     <LinearLayout
@@ -21,9 +22,6 @@
         android:layout_marginBottom="@dimen/activity_horizontal_margin"
         android:orientation="vertical">
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/emoji_recycler"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+        <include layout="@layout/select_emoji"/>
     </LinearLayout>
 </FrameLayout>
