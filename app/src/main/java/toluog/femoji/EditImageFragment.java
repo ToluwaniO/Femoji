@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -40,8 +42,10 @@ public class EditImageFragment extends Fragment {
 
     private String TAG = EditImageFragment.class.getSimpleName();
     byte[] rawImage;
-    private Bitmap startImage;
+    private Bitmap startImage, finalImage;
     private ImageView finalImageView;
+    private FloatingActionButton closeEmojis, insertEmojis;
+    private ConstraintLayout selectLayout;
     private RecyclerView emojiRecycler;
     private EmojiAdapter adapter;
     private static String ARG_ARRAY = "Picture array";
@@ -103,11 +107,30 @@ public class EditImageFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_edit_image, container, false);
         finalImageView = v.findViewById(R.id.finalImageView);
         emojiRecycler = v.findViewById(R.id.emoji_recycler);
+        closeEmojis = v.findViewById(R.id.close_emojis);
+        insertEmojis = v.findViewById(R.id.insert_emojis);
+        selectLayout = v.findViewById(R.id.select_layout);
 
         adapter = new EmojiAdapter(this, emojis);
         emojiRecycler.setLayoutManager(new LinearLayoutManager(v.getContext(),
                 LinearLayoutManager.HORIZONTAL, false));
         emojiRecycler.setAdapter(adapter);
+
+        insertEmojis.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                insertEmojis.setVisibility(View.GONE);
+                selectLayout.setVisibility(View.VISIBLE);
+            }
+        });
+
+        closeEmojis.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                insertEmojis.setVisibility(View.VISIBLE);
+                selectLayout.setVisibility(View.GONE);
+            }
+        });
 
         CameraUtils.decodeBitmap(rawImage, new CameraUtils.BitmapCallback() {
             @Override
@@ -139,13 +162,12 @@ public class EditImageFragment extends Fragment {
     }
 
     private void handleFaces(FirebaseVisionFace face) {
-        Bitmap finalImage = FaceUtil.drawSquares(startImage, face.getBoundingBox());
+        finalImage = FaceUtil.drawSquares(startImage, face.getBoundingBox());
         finalImageView.setImageBitmap(finalImage);
     }
 
     public void embedEmoji(int index) {
         Bitmap second = BitmapFactory.decodeResource(getContext().getResources(), emojis[index]);
-        Bitmap finalImage = null;
 
         if(faces != null && faces.size() > 0) {
             for (FirebaseVisionFace face : faces) {
