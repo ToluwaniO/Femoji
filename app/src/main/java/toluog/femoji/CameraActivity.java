@@ -8,8 +8,10 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import java.io.ByteArrayOutputStream;
+
 public class CameraActivity extends AppCompatActivity implements CameraFragment.OnFragmentInteractionListener,
-        EditImageFragment.OnFragmentInteractionListener {
+        EditImageFragment.OnFragmentInteractionListener, UploadFragment.OnFragmentInteractionListener {
 
     private FragmentManager fragmentManager;
 
@@ -37,5 +39,12 @@ public class CameraActivity extends AppCompatActivity implements CameraFragment.
     public void onPictureTaken(byte[] jpeg) {
         Fragment editBitmapFragment = EditImageFragment.newInstance(jpeg);
         fragmentManager.beginTransaction().replace(R.id.frame, editBitmapFragment).commit();
+    }
+
+    @Override
+    public void pictureEmojified(Bitmap bitmap) {
+
+        Fragment uploadFragment = UploadFragment.newInstance(bitmap);
+        fragmentManager.beginTransaction().replace(R.id.frame, uploadFragment).commit();
     }
 }

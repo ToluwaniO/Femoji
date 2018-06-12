@@ -44,13 +44,16 @@ public class EditImageFragment extends Fragment {
     byte[] rawImage;
     private Bitmap startImage, finalImage;
     private ImageView finalImageView;
-    private FloatingActionButton closeEmojis, insertEmojis;
+    private FloatingActionButton closeEmojis, insertEmojis, done;
     private ConstraintLayout selectLayout;
     private RecyclerView emojiRecycler;
     private EmojiAdapter adapter;
     private static String ARG_ARRAY = "Picture array";
     private List<FirebaseVisionFace> faces;
-    private int[] emojis = {R.drawable.frown_face, R.drawable.one_eye_closed_emoji, R.drawable.smile_emoji};
+    private int[] emojis = {R.drawable.frown_face, R.drawable.one_eye_closed_emoji, R.drawable.smile_emoji,
+    R.drawable.shit_emoji, R.drawable.robot_emoji, R.drawable.alien_emoji, R.drawable.innocent_emoji,
+    R.drawable.heart_eyes_emoji, R.drawable.nerd_emoji, R.drawable.devil_emoji, R.drawable.shush_emoji,
+    R.drawable.cowboy_emoji, R.drawable.sneeze_emoji, R.drawable.exploding_emoji, R.drawable.crying_emoji};
 
     private OnSuccessListener<List<FirebaseVisionFace>> sListener = new OnSuccessListener<List<FirebaseVisionFace>>() {
         @Override
@@ -110,6 +113,7 @@ public class EditImageFragment extends Fragment {
         closeEmojis = v.findViewById(R.id.close_emojis);
         insertEmojis = v.findViewById(R.id.insert_emojis);
         selectLayout = v.findViewById(R.id.select_layout);
+        done = v.findViewById(R.id.done);
 
         adapter = new EmojiAdapter(this, emojis);
         emojiRecycler.setLayoutManager(new LinearLayoutManager(v.getContext(),
@@ -129,6 +133,13 @@ public class EditImageFragment extends Fragment {
             public void onClick(View v) {
                 insertEmojis.setVisibility(View.VISIBLE);
                 selectLayout.setVisibility(View.GONE);
+            }
+        });
+
+        done.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mListener.pictureEmojified(finalImage);
             }
         });
 
@@ -205,6 +216,6 @@ public class EditImageFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-
+        public void pictureEmojified(Bitmap bitmap);
     }
 }
